@@ -1,561 +1,451 @@
-// projects.js (통합 정리본)
-// - 카드에서 projects.html?project=슬러그 로 진입 시 해당 슬라이드부터 시작
-// - 모달 오픈 시 버벅임 감소(ScrollLock, 합성 힌트)
-// - 비디오 경로 절대화 + 로드 실패 시 이미지 폴백
-// - bfcache 복원 대응
-
 import slides from "./slides.js";
 gsap.registerPlugin(SplitText);
 
 document.addEventListener("DOMContentLoaded", () => {
-  // ──────────────────────────────────────────────
+  // ─────────────────────────────────────────────
   // 유틸
-  // ──────────────────────────────────────────────
-  const $  = (sel, root = document) => root.querySelector(sel);
-  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-  const toAbs = (path) => (path ? new URL(path, document.baseURI).href : "");
+  //  - $  : 단일 요소 선택
+  //  - $$ : 다중 요소 선택 → 배열
+  //  - toAbs: 상대/루트 경로를 절대 URL로 변환
+  // ─────────────────────────────────────────────
+  const $  = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  const toAbs = (p) => (p ? new URL(p, document.baseURI).href : "");
 
-  // 시작 인덱스 계산: ?project=슬러그  또는  ?slide=번호(1-based)
-  function getStartIndex(total) {
-    const params = new URLSearchParams(location.search);
-    const slug = params.get("project");
-    const num  = Number(params.get("slide"));
-
-    if (slug) {
-      // 정확 매칭(slides.js에 slug를 넣어두는 것을 권장)
-      const exact = slides.findIndex(s => (s.slug || "") === slug);
-      if (exact !== -1) return exact + 1;
-
-      // 느슨 매칭(슬러그가 파일명/타이틀 일부와 겹칠 때)
-      const loose = slides.findIndex(s =>
-        (s.modalImg || "").includes(slug) ||
-        (s.slideTitle || "").toLowerCase().includes(slug.toLowerCase())
+  // ─────────────────────────────────────────────
+  // 시작 인덱스 계산
+  //  - ?project=슬러그 → 우선 매치
+  //  - 슬러그가 modalImg 경로나 제목에 포함되면 보조 매치
+  //  - ?slide=번호(1~total) 허용
+  //  - 모두 실패 시 1번
+  // ─────────────────────────────────────────────
+  function getStartIndex(total){
+    const q = new URLSearchParams(location.search);
+    const slug = q.get("project");
+    const num  = Number(q.get("slide"));
+    if (slug){
+      const i1 = slides.findIndex(s => (s.slug||"") === slug);
+      if (i1 !== -1) return i1 + 1;
+      const i2 = slides.findIndex(s =>
+        (s.modalImg||"").includes(slug) ||
+        (s.slideTitle||"").toLowerCase().includes(slug.toLowerCase())
       );
-      if (loose !== -1) return loose + 1;
+      if (i2 !== -1) return i2 + 1;
     }
-
-    if (Number.isInteger(num) && num >= 1 && num <= total) return num;
+    if (Number.isInteger(num) && num>=1 && num<=total) return num;
     return 1;
   }
 
-  // ──────────────────────────────────────────────
-  // 상태값
-  // ──────────────────────────────────────────────
-  const totalSlides = slides.length;
-  let currentSlide  = getStartIndex(totalSlides);
-  let isAnimating   = false;
-  let scrollAllowed = true;
-  let lastScrollTime= 0;
-  let isModalOpen   = false;
+  // ─────────────────────────────────────────────
+  // 상태 변수
+  //  - cur  : 현재 슬라이드(1-based)
+  //  - busy : 전환 중 잠금
+  //  - ok   : 입력 허용 플래그
+  //  - last : 마지막 입력 처리 시각(ms)
+  //  - modal: 모달 열림 여부(입력 차단용)
+  // ─────────────────────────────────────────────
+  const total = slides.length;
+  let cur   = getStartIndex(total);
+  let busy  = false;
+  let ok    = true;
+  let last  = 0;
+  let modal = false;
 
-  // ──────────────────────────────────────────────
-  // ScrollLock: 버벅임 줄이는 position:fixed 방식 + 스크롤바 폭 보정
-  // ──────────────────────────────────────────────
+  // ─────────────────────────────────────────────
+  // 비디오 제어
+  //  - 모든 비디오 일시정지
+  //  - 활성 슬라이드 비디오만 음소거 재생 시도
+  // ─────────────────────────────────────────────
+  const pauseAll = () => $$('video').forEach(v=>{ try{ v.pause(); }catch{} });
+  const playActive = () => {
+    const v = $('.slide.is-active video');
+    if (v) { v.muted = true; v.play().catch(()=>{}); }
+  };
+
+  // ─────────────────────────────────────────────
+  // ScrollLock
+  //  - body를 fixed로 고정하여 배경 스크롤 방지
+  //  - 스크롤바 폭만큼 padding-right 보정
+  //  - 해제 시 원위치
+  // ─────────────────────────────────────────────
   const ScrollLock = (() => {
-    let y = 0;
-    let prBackup = "";
+    let y = 0, pr = "";
     return {
-      lock() {
-        y = window.scrollY || window.pageYOffset;
-
-        const docEl = document.documentElement;
-        const body  = document.body;
-        const sbw = window.innerWidth - docEl.clientWidth;
-
-        prBackup = body.style.paddingRight || "";
-        body.style.paddingRight = sbw > 0 ? `${sbw}px` : "";
-
-        body.classList.add("is_modal_open");
-        docEl.classList.add("is_modal_open");
-
-        body.style.position = "fixed";
-        body.style.top = `-${y}px`;
-        body.style.left = "0";
-        body.style.right = "0";
-        body.style.width = "100%";
-
-        // 합성 힌트
-        body.style.willChange = "transform";
-        body.style.transform = "translateZ(0)";
+      lock(){
+        y = window.scrollY;
+        const de = document.documentElement, b = document.body;
+        const sbw = window.innerWidth - de.clientWidth;
+        pr = b.style.paddingRight || "";
+        b.style.paddingRight = sbw>0 ? `${sbw}px` : "";
+        b.classList.add("is_modal_open"); de.classList.add("is_modal_open");
+        b.style.position="fixed"; b.style.top=`-${y}px`; b.style.left="0"; b.style.right="0"; b.style.width="100%";
+        b.style.transform="translateZ(0)";
       },
-      unlock() {
-        const body = document.body;
-        const docEl = document.documentElement;
-
-        body.classList.remove("is_modal_open");
-        docEl.classList.remove("is_modal_open");
-
-        body.style.position = "";
-        body.style.top = "";
-        body.style.left = "";
-        body.style.right = "";
-        body.style.width = "";
-        body.style.willChange = "";
-        body.style.transform = "";
-
-        body.style.paddingRight = prBackup;
+      unlock(){
+        const de = document.documentElement, b = document.body;
+        b.classList.remove("is_modal_open"); de.classList.remove("is_modal_open");
+        b.style.position=b.style.top=b.style.left=b.style.right=b.style.width=b.style.transform="";
+        b.style.paddingRight = pr;
         window.scrollTo(0, y);
       }
     };
   })();
 
-  // ──────────────────────────────────────────────
-  // 다운로드(Blob 우회)
-  // ──────────────────────────────────────────────
-  async function downloadFile(url, filename) {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error("다운로드 실패");
-    const blob = await res.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = filename || "download";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(blobUrl);
+  // ─────────────────────────────────────────────
+  // 파일 다운로드(이력서 버튼용)
+  //  - fetch → blob → objectURL → a.download 트리거
+  // ─────────────────────────────────────────────
+  async function downloadFile(url, fn="download"){
+    const r = await fetch(url, { cache:"no-store" });
+    if (!r.ok) throw new Error();
+    const blob = await r.blob();
+    const u = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href=u; a.download=fn; document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(u);
   }
 
-  // ──────────────────────────────────────────────
+  // ─────────────────────────────────────────────
   // 슬라이드 DOM 생성
-  // ──────────────────────────────────────────────
-  function createSlide(slideIndex) {
-    const d = slides[slideIndex - 1];
-
+  //  - 비디오 엘리먼트 + 에러 시 이미지 폴백
+  //  - 텍스트/태그/인덱스 정보 구성
+  // ─────────────────────────────────────────────
+  function createSlide(i){
+    const d = slides[i-1];
     const slide = document.createElement("div");
     slide.className = "slide";
 
-    // 1) 비디오
-    const video = document.createElement("video");
-    video.className = "slide_video_el";
-    video.muted = true;
-    video.loop = true;
-    video.playsInline = true;
-    video.setAttribute("muted", "");
-    video.setAttribute("autoplay", "");
-    video.setAttribute("playsinline", "");
-    video.setAttribute("webkit-playsinline", "");
-    video.preload = "auto";
-    video.src = toAbs(d.slideVideo); // 경로 절대화
+    // 영상 영역
+    const wrap = document.createElement("div");
+    wrap.className = "slide_video";
+    const v = document.createElement("video");
+    v.className = "slide_video_el";
+    v.muted = true; v.loop = true; v.playsInline = true;
+    v.setAttribute("muted",""); v.setAttribute("autoplay",""); v.setAttribute("playsinline",""); v.setAttribute("webkit-playsinline","");
+    v.preload = "metadata";
+    v.src = toAbs(d.slideVideo);
+    wrap.appendChild(v);
 
-    const slideVideo = document.createElement("div");
-    slideVideo.className = "slide_video";
-    slideVideo.appendChild(video);
-
-    // 비디오 로드 실패 → 이미지 폴백
-    video.addEventListener("error", () => {
-      console.warn("[VIDEO] load failed:", video.currentSrc || video.src, video.error);
-      const img = document.createElement("img");
+    // 비디오 로드 실패 시 이미지로 교체
+    v.addEventListener("error", () => {
+      const img = new Image();
       img.alt = d.slideTitle || "project image";
-      img.decoding = "async";
-      img.loading = "eager";
+      img.decoding="async"; img.loading="eager";
       img.src = toAbs(d.modalImg || "img/fallback.jpg");
-      video.replaceWith(img);
+      v.replaceWith(img);
     });
-
-    // 메타데이터 후 재생속도
-    video.addEventListener("loadedmetadata", () => { video.playbackRate = 1.2; });
-
-    // DOM 부착 후 play 시도(iOS 정책 회피)
+    // 사용자 상호작용 또는 가시 상태에서 재생 시도
     requestAnimationFrame(() => {
-      const tryPlay = () => video.play().catch(() => {});
-      if (document.visibilityState === "visible") tryPlay();
-      window.addEventListener("pointerdown", tryPlay, { once: true });
+      const play = () => v.play().catch(()=>{});
+      if (document.visibilityState === "visible") play();
+      window.addEventListener("pointerdown", play, { once:true });
     });
 
-    // 2) 상단 헤더
-    const slideHeader = document.createElement("div");
-    slideHeader.className = "slide_header";
+    // 텍스트 블록
+    const header = document.createElement("div");
+    header.className = "slide_header";
 
-    const slideTitle = document.createElement("div");
-    slideTitle.className = "slide_title";
-    const h1 = document.createElement("h1");
-    h1.textContent = d.slideTitle;
-    slideTitle.appendChild(h1);
+    const t = document.createElement("div"); t.className="slide_title";
+    const h1=document.createElement("h1"); h1.textContent=d.slideTitle; t.appendChild(h1);
 
-    const slideDescription = document.createElement("div");
-    slideDescription.className = "slide_description";
-    const p = document.createElement("p");
-    p.textContent = d.slideDescription;
-    slideDescription.appendChild(p);
+    const desc=document.createElement("div"); desc.className="slide_description";
+    const p=document.createElement("p"); p.textContent=d.slideDescription; desc.appendChild(p);
 
-    const slideLink = document.createElement("div");
-    slideLink.className = "slide_link";
-    const a = document.createElement("a");
-    a.textContent = "View Project";
-    a.href = "#";
-    a.dataset.idx = String(slideIndex - 1); // 어떤 슬라이드인지 추적
-    slideLink.appendChild(a);
+    const link=document.createElement("div"); link.className="slide_link";
+    const a=document.createElement("a"); a.textContent="View Project"; a.href="#"; a.dataset.idx=String(i-1);
+    link.appendChild(a);
+    header.append(t, desc, link);
 
-    slideHeader.append(slideTitle, slideDescription, slideLink);
+    // 인덱스/태그
+    const info=document.createElement("div"); info.className="slide_info";
+    const idxWrap=document.createElement("div"); idxWrap.className="index_wrapper";
+    const idx=document.createElement("p"); idx.textContent=String(i).padStart(2,"0");
+    const sep=document.createElement("p"); sep.textContent="/";
+    const tot=document.createElement("p"); tot.textContent=String(total).padStart(2,"0");
+    idxWrap.append(idx, sep, tot);
+    const tags=document.createElement("div"); tags.className="slide_tags";
+    const lab=document.createElement("p"); lab.textContent="Tags"; tags.appendChild(lab);
+    (d.slideTags||[]).forEach(s=>{ const tp=document.createElement("p"); tp.textContent=s; tags.appendChild(tp); });
+    info.append(idxWrap, tags);
 
-    // 3) 하단 정보
-    const slideInfo = document.createElement("div");
-    slideInfo.className = "slide_info";
-
-    const slideIndexWrapper = document.createElement("div");
-    slideIndexWrapper.className = "index_wrapper";
-
-    const idx = document.createElement("p");
-    idx.textContent = String(slideIndex).padStart(2, "0");
-    const sep = document.createElement("p");
-    sep.textContent = "/";
-    const total = document.createElement("p");
-    total.textContent = String(totalSlides).padStart(2, "0");
-    slideIndexWrapper.append(idx, sep, total);
-
-    const slideTags = document.createElement("div");
-    slideTags.className = "slide_tags";
-    const tagsLabel = document.createElement("p");
-    tagsLabel.textContent = "Tags";
-    slideTags.appendChild(tagsLabel);
-
-    (d.slideTags || []).forEach(tag => {
-      const tagP = document.createElement("p");
-      tagP.textContent = tag;
-      slideTags.appendChild(tagP);
-    });
-
-    slideInfo.append(slideIndexWrapper, slideTags);
-
-    // 최종 조립
-    slide.append(slideVideo, slideHeader, slideInfo);
+    slide.append(wrap, header, info);
     return slide;
   }
 
-  // ──────────────────────────────────────────────
+  // ─────────────────────────────────────────────
   // SplitText 적용
-  // ──────────────────────────────────────────────
-  function splitText(slide) {
+  //  - 제목: 단어 단위
+  //  - 설명/링크/태그/인덱스: 줄 단위
+  // ─────────────────────────────────────────────
+  function splitText(slide){
     const h1 = slide.querySelector(".slide_title h1");
-    if (h1) {
-      SplitText.create(h1, { type: "words", wordsClass: "word", mask: "words" });
-    }
+    if (h1) SplitText.create(h1, { type:"words", wordsClass:"word", mask:"words" });
     $$(".slide_description p, .slide_link a, .slide_tags p, .index_wrapper p", slide)
-      .forEach(el => {
-        SplitText.create(el, { type: "lines", linesClass: "line", mask: "lines", reduceWhiteSpace: false });
-      });
+      .forEach(el => SplitText.create(el, { type:"lines", linesClass:"line", mask:"lines", reduceWhiteSpace:false }));
   }
 
-  // ──────────────────────────────────────────────
-  // 초기 마운트
-  // ──────────────────────────────────────────────
-  function mountInitialSlide() {
-    const slider = $(".slider");
-    if (!slider) return;
-    slider.querySelectorAll(":scope > .slide").forEach(el => el.remove());
-    const first = createSlide(currentSlide);
-    slider.appendChild(first);
-    splitText(first);
-    const showNow = first.querySelectorAll(".word, .line");
-    if (showNow.length) gsap.set(showNow, { y: "0%", clearProps: "transform" });
+  // ─────────────────────────────────────────────
+  // 첫 마운트
+  //  - 기존 슬라이드 제거 후 현재 인덱스 슬라이드 렌더
+  //  - SplitText 초기세팅 + 활성 비디오 재생
+  // ─────────────────────────────────────────────
+  function mountFirst(){
+    const root = $(".slider"); if (!root) return;
+    root.querySelectorAll(":scope > .slide").forEach(el=>el.remove());
+    const s = createSlide(cur);
+    s.classList.add("is-active");
+    root.appendChild(s);
+    splitText(s);
+    gsap.set(s.querySelectorAll(".word, .line"), { y:"0%", clearProps:"transform" });
+    playActive();
   }
 
-  // ──────────────────────────────────────────────
-  // 전환 애니메이션
-  // ──────────────────────────────────────────────
-  function animateSlide(direction) {
-    if (isAnimating || !scrollAllowed) return;
+  // ─────────────────────────────────────────────
+  // 전환(go)
+  //  - dir: "down" 다음 슬라이드, "up" 이전 슬라이드(순환)
+  //  - 현재 슬라이드 축소/회전/이탈
+  //  - 다음 슬라이드 클립/진입 + 텍스트 시퀀스
+  //  - 완료 시 입력 해제, 비디오 재생
+  // ─────────────────────────────────────────────
+  function go(dir){
+    if (busy || !ok) return;
+    busy = true; ok = false;
 
-    isAnimating = true;
-    scrollAllowed = false;
+    const root = $(".slider");
+    const curEl = root.querySelector(".slide.is-active");
+    cur = (dir==="down") ? (cur===total?1:cur+1) : (cur===1?total:cur-1);
 
-    const slider = $(".slider");
-    const currentSlideElement = slider.querySelector(".slide");
+    pauseAll();
 
-    currentSlide = (direction === "down")
-      ? (currentSlide === totalSlides ? 1 : currentSlide + 1)
-      : (currentSlide === 1 ? totalSlides : currentSlide - 1);
+    const exitY  = dir==="down" ? "-200vh" : "200vh";
+    const entryY = dir==="down" ? "100vh"  : "-100vh";
+    const clipIn = dir==="down" ? "polygon(20% 20%,80% 20%,80% 100%,20% 100%)"
+                                : "polygon(20% 0%,80% 0%,80% 80%,20% 80%)";
 
-    const exitY  = direction === "down" ? "-200vh" : "200vh";
-    const entryY = direction === "down" ? "100vh"  : "-100vh";
-    const entryClipPath = (direction === "down")
-      ? "polygon(20% 20%, 80% 20%, 80% 100%, 20% 100%)"
-      : "polygon(20% 0%, 80% 0%, 80% 80%, 20% 80%)";
-
-    gsap.to(currentSlideElement, {
-      scale: 0.25, opacity: 0, rotation: 30, y: exitY,
-      duration: 2, ease: "power4.inOut", force3D: true,
-      onComplete: () => currentSlideElement.remove()
+    gsap.to(curEl, {
+      scale:0.25, opacity:0, rotation:30, y:exitY, duration:2, ease:"power4.inOut", force3D:true,
+      onComplete: () => curEl.remove()
     });
+    curEl.classList.remove("is-active");
 
     setTimeout(() => {
-      const newSlide = createSlide(currentSlide);
-      gsap.set(newSlide, { y: entryY, clipPath: entryClipPath, force3D: true });
-      slider.appendChild(newSlide);
+      const next = createSlide(cur);
+      next.classList.add("is-active");
+      gsap.set(next, { y:entryY, clipPath:clipIn, force3D:true });
+      root.appendChild(next);
 
-      splitText(newSlide);
-      const words = newSlide.querySelectorAll(".word");
-      const lines = newSlide.querySelectorAll(".line");
-      gsap.set([...words, ...lines], { y: "100%", force3D: true });
+      splitText(next);
+      const els = next.querySelectorAll(".word, .line");
+      gsap.set(els, { y:"100%", force3D:true });
 
-      gsap.to(newSlide, {
-        y: 0,
-        clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
-        duration: 1.5,
-        ease: "power4.out",
-        force3D: true,
+      gsap.to(next, {
+        y:0, clipPath:"polygon(0% 0%,100% 0%,100% 100%,0% 100%)",
+        duration:1.5, ease:"power4.out", force3D:true,
         onStart: () => {
           const tl = gsap.timeline();
-          tl.to(newSlide.querySelectorAll(".slide_title .word"),
-                { y: "0%", duration: 1, ease: "power4.out", stagger: 0.1, force3D: true }, 0.75);
-          tl.to(newSlide.querySelectorAll(".slide_tags .line"),
-                { y: "0%", duration: 1, ease: "power4.out", stagger: 0.1 }, "-=0.75");
-          tl.to(newSlide.querySelectorAll(".index_wrapper .line"),
-                { y: "0%", duration: 1, ease: "power4.out", stagger: 0.1 }, "<");
-          tl.to(newSlide.querySelectorAll(".slide_description .line"),
-                { y: "0%", duration: 1, ease: "power4.out", stagger: 0.1 }, "<");
-          tl.to(newSlide.querySelectorAll(".slide_link .line"),
-                { y: "0%", duration: 1, ease: "power4.out" }, "-=1");
+          tl.to(next.querySelectorAll(".slide_title .word"), { y:"0%", duration:1, ease:"power4.out", stagger:0.1 }, 0.75)
+            .to(next.querySelectorAll(".slide_tags .line"),  { y:"0%", duration:1, ease:"power4.out", stagger:0.1 }, "-=0.75")
+            .to(next.querySelectorAll(".index_wrapper .line"),{ y:"0%", duration:1, ease:"power4.out", stagger:0.1 }, "<")
+            .to(next.querySelectorAll(".slide_description .line"),{ y:"0%", duration:1, ease:"power4.out", stagger:0.1 }, "<")
+            .to(next.querySelectorAll(".slide_link .line"),   { y:"0%", duration:1, ease:"power4.out" }, "-=1");
         },
         onComplete: () => {
-          isAnimating = false;
-          setTimeout(() => { scrollAllowed = true; lastScrollTime = Date.now(); }, 100);
+          playActive();
+          busy = false;
+          setTimeout(() => { ok = true; last = Date.now(); }, 100);
         }
       });
     }, 750);
   }
 
-  // ──────────────────────────────────────────────
-  // 입력 처리 (wheel/touch)
-  // ──────────────────────────────────────────────
-  function handleScroll(direction) {
+  // ─────────────────────────────────────────────
+  // 입력 처리(step)
+  //  - 연타 방지 쿨다운(1초)
+  //  - busy/ok 플래그 점검 후 go 호출
+  // ─────────────────────────────────────────────
+  function step(dir){
     const now = Date.now();
-    if (isAnimating || !scrollAllowed) return;
-    if (now - lastScrollTime < 1000) return; // 디바운스
-    lastScrollTime = now;
-    animateSlide(direction);
+    if (busy || !ok) return;
+    if (now - last < 1000) return;
+    last = now; go(dir);
   }
-
-  // wheel
+  // 휠 입력
   window.addEventListener("wheel", (e) => {
-    if (isModalOpen) return;
+    if (modal) return;
     e.preventDefault();
-    handleScroll(e.deltaY > 0 ? "down" : "up");
-  }, { passive: false });
+    step(e.deltaY > 0 ? "down" : "up");
+  }, { passive:false });
 
-  // touch
-  let touchStartY = 0;
-  let isTouchActive = false;
-
-  window.addEventListener("touchstart", (e) => {
-    if (isModalOpen) return;
-    touchStartY = e.touches[0].clientY;
-    isTouchActive = true;
-  }, { passive: false });
-
-  window.addEventListener("touchmove", (e) => {
-    if (isModalOpen) return;
+  // 터치 스와이프 입력
+  let y0 = 0, touching = false;
+  window.addEventListener("touchstart", (e) => { if (modal) return; y0 = e.touches[0].clientY; touching = true; }, { passive:false });
+  window.addEventListener("touchmove",  (e) => {
+    if (modal) return;
     e.preventDefault();
-    if (!isTouchActive || isAnimating || !scrollAllowed) return;
-    const diff = touchStartY - e.touches[0].clientY;
-    if (Math.abs(diff) > 50) {
-      isTouchActive = false;
-      handleScroll(diff > 0 ? "down" : "up");
-    }
-  }, { passive: false });
+    if (!touching || busy || !ok) return;
+    const dy = y0 - e.touches[0].clientY;
+    if (Math.abs(dy) > 50){ touching = false; step(dy>0 ? "down" : "up"); }
+  }, { passive:false });
+  window.addEventListener("touchend",   () => { touching = false; });
 
-  window.addEventListener("touchend", () => { isTouchActive = false; });
+  // ─────────────────────────────────────────────
+  // 초기 렌더
+  // ─────────────────────────────────────────────
+  mountFirst();
 
-  // ──────────────────────────────────────────────
-  // 초기 마운트
-  // ──────────────────────────────────────────────
-  mountInitialSlide();
-
-  // ──────────────────────────────────────────────
-  // bfcache 복원
-  // ──────────────────────────────────────────────
+  // ─────────────────────────────────────────────
+  // bfcache 복귀 시 초기화
+  // ─────────────────────────────────────────────
   window.addEventListener("pageshow", (e) => {
-    if (e.persisted) {
-      currentSlide = getStartIndex(totalSlides); // URL 기준 재계산
-      mountInitialSlide();
-      lastScrollTime = Date.now();
-    }
+    if (e.persisted) { cur = getStartIndex(total); mountFirst(); last = Date.now(); }
   });
 
-  // ──────────────────────────────────────────────
-  // 이력서 모달
-  // ──────────────────────────────────────────────
-  (function resumeModal() {
+  // ─────────────────────────────────────────────
+  // 이력서 모달(기능 유지)
+  //  - 열기: 배경 재생 중지, ScrollLock, 포커스 이동
+  //  - 닫기: ScrollLock 해제, 상태 복구, 비디오 재생
+  //  - 다운로드: fetch 실패 시 새 탭 백업
+  // ─────────────────────────────────────────────
+  (function resumeModal(){
     const link = document.querySelector('a[href="#contact"]');
-    const dlg  = document.getElementById("resumeDialog");
+    const dlg  = $("#resumeDialog");
     if (!link || !dlg) return;
+    const sheet = $(".modal_sheet", dlg);
+    const btnX  = $("#resumeClose", dlg);
+    const btnDL = $("#resumeDownload", dlg);
 
-    const sheet    = dlg.querySelector(".modal_sheet");
-    const btnClose = dlg.querySelector("#resumeClose");
-    const btnDL    = dlg.querySelector("#resumeDownload");
-
-    const openModal = () => {
-      isModalOpen = true;
-      scrollAllowed = false;
-
-      (typeof dlg.showModal === "function") ? dlg.showModal() : dlg.setAttribute("open", "");
+    const open = () => {
+      modal = true; ok = false; pauseAll();
+      dlg.showModal?.() ?? dlg.setAttribute("open","");
       ScrollLock.lock();
-
-      // 슬라이더 이벤트 잠깐 차단(hover/paint 줄이기)
-      document.querySelector(".slider")?.classList.add("pe-none");
-
-      gsap.fromTo(
-        sheet,
-        { yPercent: -4, scale: 0.98, autoAlpha: 0 },
-        { yPercent: 0,  scale: 1.00, autoAlpha: 1, duration: 0.35, ease: "power2.out",
-          onComplete: () => setTimeout(() => btnClose?.focus(), 10)
-        }
-      );
+      $(".slider")?.classList.add("pe-none");
+      gsap.fromTo(sheet, { yPercent:-4, scale:0.98, autoAlpha:0 }, { yPercent:0, scale:1, autoAlpha:1, duration:0.35, ease:"power2.out",
+        onComplete: ()=> setTimeout(()=>btnX?.focus(),10)
+      });
     };
-
-    const closeModal = () => {
-      gsap.timeline({
-        onComplete: () => {
+    const close = () => {
+      gsap.to(sheet, { yPercent:-4, scale:0.98, autoAlpha:0, duration:0.2, ease:"power2.in",
+        onComplete: ()=>{
           dlg.close?.() || dlg.removeAttribute("open");
           ScrollLock.unlock();
-          isModalOpen = false;
-          lastScrollTime = Date.now();
-          setTimeout(() => { scrollAllowed = true; }, 100);
-          document.querySelector(".slider")?.classList.remove("pe-none");
+          modal = false; last = Date.now();
+          setTimeout(()=>{ ok = true; }, 100);
+          $(".slider")?.classList.remove("pe-none");
+          playActive();
         }
-      }).to(sheet, { yPercent: -4, scale: 0.98, autoAlpha: 0, duration: 0.2, ease: "power2.in" });
-    };
-
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      if (location.hash) history.replaceState(null, "", location.pathname + location.search);
-      openModal();
-    });
-
-    btnClose?.addEventListener("click", closeModal);
-    dlg.addEventListener("cancel", (e) => { e.preventDefault(); closeModal(); });
-    dlg.addEventListener("click", (e) => {
-      const r = sheet.getBoundingClientRect();
-      const inside = (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom);
-      if (!inside) closeModal();
-    });
-
-    btnDL?.addEventListener("click", async (e) => {
-      e.preventDefault();
-      const href = toAbs("/img/resume.png");
-      try {
-        await downloadFile(href, "resume.png");
-      } catch {
-        window.open(href, "_blank", "noopener");
-      }
-    });
-  })();
-
-  // ──────────────────────────────────────────────
-  // 프로젝트 모달(이미지 고해상도 지연 스왑)
-  // ──────────────────────────────────────────────
-  (function projectModal() {
-    const dlg = document.getElementById("projectDialog");
-    if (!dlg) return;
-
-    const sheet    = dlg.querySelector(".modal_sheet");
-    const btnClose = dlg.querySelector("#resumeClose");    // HTML 아이디 재활용
-    const btnDL    = dlg.querySelector("#resumeDownload");
-    const titleEl  = dlg.querySelector("#resumeTitle");
-    const imgEl    = dlg.querySelector("#resumeImg");
-
-    const swapImageAsync = (img, { src, srcset, sizes }) => {
-      return new Promise((resolve) => {
-        const temp = new Image();
-        if (sizes)  temp.sizes  = sizes;
-        if (srcset) temp.srcset = srcset;
-        temp.decoding = "async";
-        temp.onload = () => {
-          if (sizes)  img.sizes  = sizes;  else img.removeAttribute("sizes");
-          if (srcset) img.srcset = srcset; else img.removeAttribute("srcset");
-          img.src = src;
-          resolve();
-        };
-        temp.src = src;
       });
     };
 
-    const openModal = ({ thumbSrc, hiSrc, hiSrcset, hiSizes }) => {
-      if (isModalOpen) return;
-      isModalOpen   = true;
-      scrollAllowed = false;
-
-      (typeof dlg.showModal === "function") ? dlg.showModal() : dlg.setAttribute("open", "");
-      ScrollLock.lock();
-
-      document.querySelector(".slider")?.classList.add("pe-none");
-
-      if (imgEl) {
-        if (thumbSrc) {
-          imgEl.src = toAbs(thumbSrc);
-          imgEl.removeAttribute("srcset");
-          imgEl.removeAttribute("sizes");
-        }
-        imgEl.decoding = "async";
-        imgEl.loading  = "eager";
-        imgEl.fetchPriority = "low";
-      }
-
-      gsap.fromTo(
-        sheet,
-        { yPercent: -4, scale: 0.98, autoAlpha: 0 },
-        {
-          yPercent: 0, scale: 1, autoAlpha: 1, duration: 0.35, ease: "power2.out",
-          onComplete: async () => {
-            if (imgEl && hiSrc) {
-              imgEl.fetchPriority = "high";
-              await swapImageAsync(imgEl, { src: toAbs(hiSrc), srcset: hiSrcset, sizes: hiSizes });
-            }
-            setTimeout(() => btnClose?.focus(), 10);
-          }
-        }
-      );
-    };
-
-    const closeModal = () => {
-      gsap.timeline({
-        onComplete: () => {
-          dlg.close?.() || dlg.removeAttribute("open");
-          ScrollLock.unlock();
-          isModalOpen = false;
-          lastScrollTime = Date.now();
-          setTimeout(() => { scrollAllowed = true; }, 100);
-          document.querySelector(".slider")?.classList.remove("pe-none");
-        }
-      }).to(sheet, { yPercent: -4, scale: 0.98, autoAlpha: 0, duration: 0.2, ease: "power2.in" });
-    };
-
-    // 위임 클릭: .slide_link a
-    document.addEventListener("click", (e) => {
-      const link = e.target.closest(".slide_link a");
-      if (!link) return;
-
+    link.addEventListener("click", e => { e.preventDefault(); open(); });
+    btnX?.addEventListener("click", close);
+    dlg.addEventListener("cancel", e => { e.preventDefault(); close(); });
+    dlg.addEventListener("click", e => {
+      const r = sheet.getBoundingClientRect();
+      const inside = (e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom);
+      if (!inside) close();
+    });
+    btnDL?.addEventListener("click", async e => {
       e.preventDefault();
-      if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+      const href = toAbs("/img/resume.png");
+      try { await downloadFile(href, "resume.png"); } catch { window.open(href, "_blank", "noopener"); }
+    });
+  })();
 
-      const idx  = Number(link.dataset.idx ?? -1);
-      const data = slides[idx];
+  // ─────────────────────────────────────────────
+  // 프로젝트 모달(간결판)
+  //  - 썸네일 선표시 → 원본 프리로드 후 같은 노드로 스왑
+  //  - 다운로드 링크 href/download 속성 세팅
+  //  - 슬라이드 내 "View Project" 클릭을 위임 처리
+  // ─────────────────────────────────────────────
+  (function projectModal(){
+    const dlg = $("#projectDialog");
+    if (!dlg) return;
+    const sheet = $(".modal_sheet", dlg);
+    const btnX  = $("#resumeClose", dlg);
+    const btnDL = $("#resumeDownload", dlg);
+    const title = $("#resumeTitle", dlg);
+    const host  = $(".modal_body", dlg);
 
-      if (titleEl) titleEl.textContent = (data?.slideTitle) || "Project";
-
-      const thumbSrc  = data?.modalThumb || data?.modalImg || "img/img1.png";
-      const hiSrc     = data?.modalImg   || "img/img1.png";
-      const hiSrcset  = data?.modalSrcset || ""; // "img@1x.webp 1x, img@2x.webp 2x"
-      const hiSizes   = "(min-width: 768px) 60vw, 90vw";
-
-      if (btnDL) {
-        const href = toAbs(data?.modalDownload || hiSrc);
-        btnDL.setAttribute("href", href);
-        const fn = (data?.modalDownload || hiSrc || "download").split("/").pop();
-        btnDL.setAttribute("download", fn);
-      }
-
-      openModal({ thumbSrc, hiSrc, hiSrcset, hiSizes });
+    // 새 이미지 노드 준비
+    const freshImg = () => {
+      host.querySelector("#resumeImg")?.remove();
+      const img = new Image();
+      img.id="resumeImg"; img.alt="프로젝트이미지";
+      img.decoding="async"; img.loading="eager"; img.style.opacity="0";
+      host.appendChild(img); return img;
+    };
+    // 프리로드 유틸
+    const preload = (src, srcset, sizes) => new Promise((res, rej)=>{
+      const t = new Image(); if (sizes) t.sizes=sizes; if (srcset) t.srcset=srcset; t.decoding="async";
+      t.onload = () => res({src, srcset, sizes}); t.onerror = rej; t.src = src;
     });
 
-    btnClose?.addEventListener("click", closeModal);
-    dlg.addEventListener("cancel", (e) => { e.preventDefault(); closeModal(); });
-    dlg.addEventListener("click", (e) => {
+    // 열기
+    async function open({thumb, full, srcset, sizes}){
+      if (modal) return;
+      modal = true; ok = false; pauseAll();
+      dlg.showModal?.() ?? dlg.setAttribute("open","");
+      ScrollLock.lock();
+      $(".slider")?.classList.add("pe-none");
+
+      const img = freshImg();
+      // 썸네일 선표시
+      try { const t = await preload(toAbs(thumb)); img.src = t.src; requestAnimationFrame(()=>img.style.opacity="1"); } catch {}
+
+      // 모달 애니메이션 후 원본으로 스왑
+      gsap.fromTo(sheet, { yPercent:-4, scale:0.98, autoAlpha:0 }, { yPercent:0, scale:1, autoAlpha:1, duration:0.35, ease:"power2.out",
+        onComplete: async () => {
+          try{
+            const t = await preload(toAbs(full), srcset, sizes);
+            if (t.sizes) img.sizes=t.sizes; else img.removeAttribute("sizes");
+            if (t.srcset) img.srcset=t.srcset; else img.removeAttribute("srcset");
+            img.src = t.src; // 동일 노드 교체 → 깜빡임 최소화
+          } finally { setTimeout(()=>btnX?.focus(),10); }
+        }
+      });
+    }
+    // 닫기
+    function close(){
+      gsap.to(sheet, { yPercent:-4, scale:0.98, autoAlpha:0, duration:0.2, ease:"power2.in",
+        onComplete: ()=>{
+          dlg.close?.() || dlg.removeAttribute("open");
+          ScrollLock.unlock();
+          modal = false; last = Date.now();
+          setTimeout(()=>{ ok = true; }, 100);
+          $(".slider")?.classList.remove("pe-none");
+          playActive();
+        }
+      });
+    }
+
+    // 위임 클릭 핸들러: 슬라이드의 "View Project"
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest(".slide_link a");
+      if (!a) return;
+      e.preventDefault();
+
+      const i = Number(a.dataset.idx ?? -1);
+      const d = slides[i];
+      title && (title.textContent = d?.slideTitle || "Project");
+
+      const thumb = d?.modalThumb || d?.modalImg || "img/img1.png";
+      const full  = d?.modalImg   || "img/img1.png";
+      const srcset= d?.modalSrcset || "";
+      const sizes = "(min-width: 768px) 60vw, 90vw";
+
+      if (btnDL){
+        const href = toAbs(d?.modalDownload || full);
+        btnDL.setAttribute("href", href);
+        btnDL.setAttribute("download", (d?.modalDownload || full).split("/").pop());
+      }
+      open({ thumb, full, srcset, sizes });
+    });
+
+    btnX?.addEventListener("click", close);
+    dlg.addEventListener("cancel", e => { e.preventDefault(); close(); });
+    dlg.addEventListener("click", e => {
       const r = sheet.getBoundingClientRect();
-      const inside = (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom);
-      if (!inside) closeModal();
+      const inside = (e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom);
+      if (!inside) close();
     });
   })();
 });
-                                            
