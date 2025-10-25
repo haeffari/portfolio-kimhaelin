@@ -16,7 +16,7 @@ const slides = [
       "A minimal yet organic concept emphasizing sustainability, gentle care, and eco-friendly living.",
     slideTags: ["scroll wheel"],
     slideVideo: "./projects_img/slide_video2.mp4",
-    modalImg: "./projects_img/project_shampoo.png"
+    modalImg: "./projects_img/project_shampoo.jpg"
   },
   {
     slug: "toner",
@@ -25,7 +25,7 @@ const slides = [
       "A fresh and calming aesthetic inspired by marine energy, designed to communicate purity and hydration.",
     slideTags: ["scroll wheel"],
     slideVideo: "./projects_img/slide_video3.mp4",
-    modalImg: "./projects_img/project_toner.png"
+    modalImg: "./projects_img/project_toner.jpg"
   },
   {
     slug: "salad",
@@ -34,7 +34,7 @@ const slides = [
       "A vibrant and healthy food visual, combining crisp textures and motion details to evoke natural freshness.",
     slideTags: ["scroll wheel"],
     slideVideo: "./projects_img/slide_video4.mp4",
-    modalImg: "./projects_img/project_salad.png"
+    modalImg: "./projects_img/project_salad.jpg"
   },
   {
     slug: "banner",
@@ -43,7 +43,7 @@ const slides = [
        "A dynamic horizontal banner design tailored for events, using bold visuals and rhythmic motion to capture attention and convey key messages effectively.",
     slideTags: ["scroll wheel"],
     slideVideo: "./projects_img/slide_video5.mp4",
-    modalImg: "./projects_img/project_banner.png"
+    modalImg: "./projects_img/project_banner.jpg"
   }
 ];
 
