@@ -1,0 +1,147 @@
+ /* ==========================================================================
+   color tokens / default css  (글로벌 변수 + 기본 설정)
+   ========================================================================== */
+/* slider */
+.slider {
+  position: relative;
+  width: 100vw;
+  height: 100svh;
+  background-color: #000;
+  overflow: hidden;
+  color: #fbf8f8;
+}
+
+/* header */
+.slider header {
+  background: transparent;
+}
+
+/* slider linde, word */
+.slider .line,
+.slider .word {
+  position: relative;
+  display: inline-block;
+  will-change: transform;
+}
+
+/* slider h1 */
+.slider h1 {
+  font-size: 5rem;
+  font-weight: 500;
+  letter-spacing: -0.1rem;
+}
+
+/* slide */
+.slider .slide {
+  will-change: transform;
+}
+
+/* slide, slide_video */
+.slider .slide,
+.slider .slide_video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100svh;
+}
+
+/* slide_header */
+.slider .slide_header {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translate(-50%, 0%);
+  width: 50%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  z-index: 1;
+}
+
+/* slider slide_link, slider .slide_header h1 */
+.slider .slide_link,
+.slider .slide_header h1 {
+  font-weight: 500;
+}
+
+/* slide_description */
+.slider .slide_description {
+  width: 50%;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* slide_info */
+.slider .slide_info {
+  position: absolute;
+  left: 0;
+  bottom: 2rem;
+  width: 100vw;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+/* slide_tags */
+.slider .slide_tags {
+  display: flex;
+  flex-direction: column;
+}
+
+/* slide_tags p:first-child */
+.slider .slide_tags p:first-child {
+  margin-bottom: 1rem;
+  display: none;
+}
+
+/* index_wrapper */
+.slider .index_wrapper {
+  display: flex;
+}
+
+/* index_wrapper p */
+.slider .index_wrapper p {
+  text-align: center;
+  width: 2rem;
+}
+
+/* slide_video */
+.slide_video {
+  filter: brightness(0.65);
+}
+
+/* slide_video_el */
+.slide_video_el{
+  backface-visibility:hidden;
+  transform:translateZ(0);
+  will-change:transform;
+  contain:paint;
+}
+
+/* modal modal_head */
+.slider .modal .modal_head {
+  background-color: color-mix(in hsl, var(--bg) 30%, transparent);
+  border: none;
+  backdrop-filter: unset;
+}
+
+/* slider modal modal_head */
+.slider .modal .modal_head h2 {
+  color:  #fff;
+  font-size: 1.2rem;
+}
+
+/* slider .modal_actions a, slider .modal_actions button */
+.slider .modal_actions a,
+.slider .modal_actions button,
+.btn_theme {
+  border-color: #fff !important;
+  border-width: 1px;
+  border-style: solid;
+  opacity: 1;
+  color: #ffff;
+}

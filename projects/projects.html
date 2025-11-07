@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Projects Page | Kim Haelin Portfolio 2025</title>
+    <!-- ico 기본 -->
+    <link rel="icon" href="../img/favicon.ico" type="image/x-icon">
+    <!-- png 추가 지원 -->
+    <link rel="icon" href="../img/favicon.png" type="image/png" sizes="32x32">
+    <link rel="icon" href="../img/favicon.png" type="image/png" sizes="64x64">
+    <!-- 애플 터치 아이콘 (iOS 홈화면용) -->
+    <link rel="apple-touch-icon" href="../img/favicon.png">
+    <!-- reset css -->
+    <link rel="stylesheet" href="../css/reset.css"/>
+    <!-- main css -->
+    <link rel="stylesheet" href="../css/main.css"/> 
+    <!-- projects css -->
+    <link rel="stylesheet" href="./projects.css"/>
+    <!-- responsive css -->
+    <link rel="stylesheet" href="../css/responsive.css"/>
+    <!-- GSAP & PLUGINS (3.13.0) - SplitText, CustomEase -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/CustomEase.min.js"></script>
+    <!-- projects js -->
+    <script type="module" src="./projects.js"></script>
+  </head>
+  <body>
+    <!-- slider -->
+    <div class="slider">
+      <!-- header -->
+      <header>
+        <!-- nav_row -->
+        <div class="nav_row">
+          <!-- logo -->
+          <a class="logo" href="../index.html">HAELIN</a>
+          <!-- // logo -->
+          <!-- nav_links -->
+          <nav class="nav_links">
+            <a class="btn_theme" href="#contact">Resume</a>
+          </nav>
+          <!-- // nav_links -->
+        </div>
+        <!-- // nav_row -->
+      </header>
+      <!-- // header -->
+      <!-- slide -->
+      <div class="slide">
+        <!-- slide_header -->
+        <div class="slide_header">
+          <!-- slide_title -->
+          <div class="slide_title">
+            <h1></h1>
+          </div>
+          <!-- // slide_title -->
+          <!-- slide_description -->
+          <div class="slide_description">
+            <p>
+            </p>
+          </div>
+          <!-- // slide_description -->
+          <!-- slide_link -->
+          <div class="slide_link">
+            <a id="openProjectDialog" href="#">View Project</a>
+          </div>
+          <!-- // slide_link -->
+        </div>
+        <!-- slide_info -->
+        <div class="slide_info">
+          <!-- index_wrapper -->
+          <div class="index_wrapper">
+            <!-- slide_index -->
+            <p id="slide_index"></p>
+            <!-- // slide_index -->
+            <p>/</p>
+            <!-- slide_count -->
+            <p id="slide_count"></p>
+            <!-- // slide_count  -->
+          </div>
+          <!-- // index_wrapper -->
+          <!-- slide_tags -->
+          <div class="slide_tags">
+          </div>
+          <!-- // slide_tags -->
+        </div>
+        <!-- // slide_info -->
+        <!-- slide_video -->
+        <div class="slide_video">
+          <video autoplay muted loop>
+            <source src="./projects_img/slide_video1.mp4" type="video/mp4"/>
+            <a href="#"></a>
+          </video>
+        </div>
+        <!-- // slide_video -->
+      </div>
+      <!-- // slide -->
+      <!-- modal : projectDialog -->
+      <dialog id="projectDialog" class="modal">
+        <!-- modal_sheet -->
+        <div class="modal_sheet" role="document">
+          <!-- modal_head -->
+          <header class="modal_head">
+            <!-- resumeTitle -->
+            <h2 id="resumeTitle">Resume</h2>
+            <!-- // resumeTitle -->
+            <!-- modal_actions -->
+            <div class="modal_actions">
+              <!-- resumeClose -->
+              <button id="resumeClose" class="btn" value="close">Close</button>
+              <!-- // resumeClose -->
+            </div>
+            <!-- // modal_actions -->
+          </header>
+          <!-- // modal_head -->
+          <!-- modal_body -->
+          <div class="modal_body">
+            <img id="resumeImg" src="" alt="프로젝트이미지"/>
+          </div>
+          <!-- // modal_body -->
+        </div>
+        <!-- // modal_sheet -->
+      </dialog>
+      <!-- // modal : projectDialog -->
+      <!-- modal : resumeDialog -->
+      <dialog id="resumeDialog" class="modal">
+        <!-- modal_sheet -->
+        <div class="modal_sheet" role="document">
+          <!-- modal_head -->
+          <header class="modal_head">
+            <!-- resumeTitle -->
+            <h2 id="resumeTitle">Resume</h2>
+            <!-- // resumeTitle -->
+            <!-- modal_actions -->
+            <div class="modal_actions">
+              <!-- resumeDownload -->
+              <a id="resumeDownload" class="btn" href="./projects_img/resume.jpg" download>Download</a>
+              <!-- // resumeDownload -->
+              <!-- resumeClose -->
+              <button id="resumeClose" class="btn" value="close">Close</button>
+              <!-- // resumeClose -->
+            </div>
+            <!-- // modal_actions -->
+          </header>
+          <!-- // modal_head -->
+          <!-- modal_body -->
+          <div class="modal_body">
+            <img id="resumeImg" src="./projects_img/resume.jpg" alt="이력서 이미지"/>
+          </div>
+          <!-- // modal_body -->
+        </div>
+        <!-- // modal_sheet -->
+      </dialog>
+      <!-- // modal : resumeDialog -->
+    </div>
+    <!-- // slider -->
+  </body>
+</html>
