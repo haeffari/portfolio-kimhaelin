@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark"> 
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kim Haelin Portfolio 2025</title>
+  <!-- ico 기본 -->
+  <link rel="icon" href="./img/favicon.ico" type="image/x-icon">
+  <!-- png 추가 지원 -->
+  <link rel="icon" href="./img/favicon.png" type="image/png" sizes="32x32">
+  <link rel="icon" href="./img/favicon.png" type="image/png" sizes="64x64">
+  <!-- 애플 터치 아이콘 (iOS 홈화면용) -->
+  <link rel="apple-touch-icon" href="./img/favicon.png">
+  <!-- reset css -->
+  <link rel="stylesheet" href="css/reset.css"/>
+  <!-- main css -->
+  <link rel="stylesheet" href="css/main.css"/>
+  <!-- responsive css -->
+  <link rel="stylesheet" href="css/responsive.css"/>
+  <!-- font awesome cdn -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- GSAP & PLUGINS (3.13.0) - Flip, ScrollTrigger, ScrollToPlugin, SplitText, CustomEase -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/Flip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollToPlugin.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/CustomEase.min.js"></script>
+  <!-- main js -->
+  <script src="main.js" defer></script>
+</head>   
+<body>
+  <!-- header -->
+  <header>
+    <!-- nav_row -->
+    <div class="nav_row">
+      <!-- logo -->
+      <a class="logo" href="#top">HAELIN</a>
+      <!-- // logo -->
+      <!-- nav_links -->
+      <nav class="nav_links">
+        <a href="#works">Projects</a>
+        <a href="#contact">Resume</a>
+      </nav>
+      <!-- // nav_links -->
+      <!-- btn_theme -->
+      <button class="btn btn_theme" id="btnTheme" aria-pressed="true" title="Toggle theme">
+        <!-- btn_theme__label -->
+        <span class="btn_theme__label">dark mode</span>
+        <!-- // btn_theme__label -->
+        <!-- icon-moon : dark일 때 보일 달 -->
+        <em class="icon icon-moon" aria-hidden="true"></em>
+        <!-- // icon-moon : dark일 때 보일 달 -->
+        <!-- icon-sun : light일 때 보일 해 -->
+        <em class="icon icon-sun"  aria-hidden="true"></em>
+        <!-- // icon-sun : light일 때 보일 해 -->
+      </button>
+      <!-- // btn_theme -->
+    </div>
+    <!-- // nav_row -->
+  </header>
+  <!-- // header -->
+  <!-- main -->
+  <main id="top">
+    <!-- hero -->
+    <section class="hero">
+      <!-- hero_bg -->
+      <div class="hero_bg"></div>
+      <!-- // hero_bg -->
+      <!-- counter -->
+      <div class="counter">
+        <div class="counter_1 digit"></div>
+        <div class="counter_2 digit"></div>
+        <div class="counter_3 digit"></div>
+      </div>  
+      <!-- // counter -->
+      <!-- img_box -->
+      <div class="img_box">
+        <div class="img"><img src="./img/thum_banner.jpg" alt="배너 썸네일 이미지"/></div>
+        <div class="img"><img src="./img/thum_salad.jpg" alt="샐러드 상세페이지 썸네일 이미지"/></div>
+        <div class="img"><img src="./img/thum_shampoobar.jpg" alt="샴푸바 상세페이지 썸네일 이미지"/></div>
+        <div class="img"><img src="./img/thum_toner.jpg" alt="토너 상세페이지 썸네일 이미지"/></div>
+        <div class="img"><img src="./img/thum_pinecut.jpg" alt="파인컷 상세페이지 썸네일 이미지"/></div>
+      </div>
+      <!-- // img_box -->
+      <!-- hero_wrap -->
+      <div class="hero_wrap">
+        <!-- hero_meta -->
+        <div class="hero_meta">
+          <!-- hero_title -->
+          <div class="hero_title">
+            <!-- kicker -->
+            <h2 class="kicker">Beyond the Screen.</h2>
+            <!-- // kicker -->
+            <!-- lede -->
+            <p class="lede">
+              Web / Motion / Visual. Building clear, tactile experiences with GSAP & clean systems.
+            </p>
+            <!-- // lede -->
+          </div>
+          <!-- // hero_title -->
+          <!-- cta -->
+          <div class="cta">
+            <!-- btn_cta -->
+            <a class="btn btn_cta" href="#works">Take a seat ↗</a>
+            <!-- // btn_cta -->
+          </div>
+          <!-- // cta -->
+        </div>
+        <!-- // hero_meta -->
+        <!-- hero_wordmark -->
+        <h1 class="hero_wordmark">archive.</h1>
+        <!-- // hero_wordmark -->
+        <!-- hero_footer -->
+        <div class="hero_footer innner">
+          <p>Incheon—Korea</p>
+          <p>rinxonny97@gmail.com</p>
+          <p>©2025</p>
+        </div>
+        <!-- // hero_footer -->
+      </div>
+      <!-- // hero_wrap -->
+    </section>
+    <!-- // hero -->
+    <!-- works -->
+    <section id="works" class="works">
+      <!-- section_head -->
+      <div class="section_head">
+        <!-- mask_reveal -->
+        <div class="mask_reveal">Featured Works</div>
+        <!-- // mask_reveal -->
+        <!-- filters -->
+        <div class="filters" role="toolbar">
+          <button class="chip" data-filter="all" aria-pressed="true">All</button>
+          <button class="chip" data-filter="detail">Detail</button>
+          <button class="chip" data-filter="banner">Banner</button>
+          <button class="chip" data-filter="video">Video</button>
+        </div>
+        <!-- // filters -->
+      </div>  
+      <!-- // section_head -->
+      <!-- card_grid -->
+      <div class="card_grid" id="cardGrid">
+        <!-- card -->
+        <article class="card" data-tags="detail">
+          <!-- card_img -->
+          <img class="card_img" src="./img/thum_pinecut.jpg" alt="파인컷 상세페이지 썸네일"/>
+          <!-- // card_img -->
+          <!-- card_body -->
+          <div class="card_body">
+            <!-- card_meta -->
+            <div class="card_meta"><span>Detail Page</span>·<span>2025</span></div>
+            <!-- // card_meta -->
+            <!-- card_title -->
+            <div class="card_title">Pineapple Enzyme / Detail Page</div>
+            <!-- // card_title -->
+          </div>
+          <!-- // card_body -->
+          <!-- card_hover -->
+          <a class="card_hover" href="./projects/projects.html?project=pinecut">View</a>
+          <!-- // card_hover -->
+        </article>
+        <!-- // card -->
+        <!-- card -->
+        <article class="card" data-tags="detail">
+          <!-- card_img -->
+          <img class="card_img" src="./img/thum_salad.jpg" alt="샐러드 상세페이지 썸네일"/>
+          <!-- // card_img -->
+          <!-- card_body -->
+          <div class="card_body">
+            <!-- card_meta -->
+            <div class="card_meta"><span>Detail Page</span>·<span>2025</span></div>
+            <!-- // card_meta -->
+            <!-- card_title -->
+            <div class="card_title">Organic Fresh Salad / Detail Page</div>
+            <!-- // card_title -->
+          </div>
+          <!-- // card_body -->
+          <!-- card_hover -->
+          <a class="card_hover" href="./projects/projects.html?project=salad">View</a>
+          <!-- // card_hover -->
+        </article>
+        <!-- // card -->
+        <!-- card -->
+        <article class="card" data-tags="detail">
+          <!-- card_img -->
+          <img class="card_img" src="./img/thum_toner.jpg" alt="토너 상세페이지 썸네일"/>
+          <!-- // card_img -->
+          <!-- card_body -->
+          <div class="card_body">
+            <!-- card_meta -->
+            <div class="card_meta"><span>Detail Page</span>·<span>2025</span></div>
+            <!-- // card_meta -->
+            <!-- card_title -->
+            <div class="card_title">Coral Refresh Toner / Detail Page </div>
+            <!-- // card_title -->
+          </div>
+          <!-- // card_body -->
+          <!-- card_hover -->
+          <a class="card_hover" href="./projects/projects.html?project=toner">View</a>
+          <!-- // card_hover -->
+        </article>
+        <!-- // card -->
+        <!-- card -->
+        <article class="card" data-tags="detail">
+          <!-- card_img -->
+          <img class="card_img" src="./img/thum_shampoobar.jpg" alt="샴푸바 상세페이지 썸네일"/>
+          <!-- // card_img -->
+          <!-- card_body -->
+          <div class="card_body">
+            <!-- card_meta -->
+            <div class="card_meta"><span>Detail Page</span>·<span>2025</span></div>
+            <!-- // card_meta -->
+            <!-- card_title -->
+            <div class="card_title">Natural Shampoo Bar / Detail Page</div>
+            <!-- // card_title -->
+          </div>
+          <!-- // card_body -->
+          <!-- card_hover -->
+          <a class="card_hover" href="./projects/projects.html?project=shampoobar">View</a>
+          <!-- // card_hover -->
+        </article>
+        <!-- // card -->
+        <!-- card -->
+        <article class="card" data-tags="banner">
+          <!-- card_img -->
+          <img class="card_img" src="./img/thum_banner.jpg" alt="배너 썸네일"/>
+          <!-- // card_img -->
+          <!-- card_body -->
+          <div class="card_body">
+            <!-- card_meta -->
+            <div class="card_meta"><span>banner</span>·<span>2025</span></div>
+            <!-- // card_meta -->
+            <!-- card_title -->
+            <div class="card_title">Event Banner / horizontal banner</div>
+            <!-- // card_title -->
+          </div>
+          <!-- // card_body -->
+          <!-- card_hover -->
+          <a class="card_hover" href="./projects/projects.html?project=banner">View</a>
+          <!-- // card_hover -->
+        </article>
+        <!-- // card -->
+        <!-- card -->
+        <article class="card" data-tags="video">
+          <!-- card_img -->
+          <img class="card_img" src="./img/thum_video.jpg" alt="영상 썸네일"/>
+          <!-- // card_img -->
+          <!-- card_body -->
+          <div class="card_body">
+            <!-- card_meta -->
+            <div class="card_meta"><span>video</span>·<span>2025</span></div>
+            <!-- // card_meta -->
+            <!-- card_title -->
+            <div class="card_title">Short Form Video</div>
+            <!-- // card_title -->
+          </div>
+          <!-- // card_body -->
+          <!-- card_hover -->
+          <a class="card_hover" href="./projects/projects.html?project=video">View</a>
+          <!-- // card_hover -->
+        </article>
+        <!-- // card -->
+      </div>
+      <!-- // card_grid -->
+    </section>
+    <!-- // works -->
+  </main>
+  <!-- // main -->
+  <!-- footer -->
+  <footer>
+    <!-- inner -->
+    <div class="inner">
+      <span>© 2025 Haelin. All rights reserved.</span>
+      <span>Built with HTML · CSS · GSAP</span>
+    </div>
+    <!-- // inner -->
+  </footer>
+  <!-- // footer -->
+  <!-- modal -->
+  <dialog id="resumeDialog" class="modal">
+    <!-- modal_sheet -->
+    <div class="modal_sheet" role="document">
+      <!-- modal_head -->
+      <header class="modal_head">
+        <!-- resumeTitle -->
+        <h2 id="resumeTitle">Resume</h2>
+        <!-- // resumeTitle -->
+        <!-- modal_actions -->
+        <div class="modal_actions">
+          <!-- resumeDownload -->
+          <a id="resumeDownload" class="btn" href="./img/resume.jpg" download>Download</a>
+          <!-- // resumeDownload -->
+          <!-- resumeClose -->
+          <button id="resumeClose" class="btn" value="close">Close</button>
+          <!-- // resumeClose -->
+        </div>
+        <!-- // modal_actions -->
+      </header>
+      <!-- // modal_head -->
+      <!-- modal_body -->
+      <div class="modal_body">
+        <img id="resumeImg" src="./img/resume.jpg" alt="이력서 이미지"/>
+      </div>
+      <!-- // modal_body -->
+    </div>
+    <!-- // modal_sheet -->
+  </dialog>
+  <!-- // modal -->
+</body>
+</html>
+<!-- trigger redeploy -->

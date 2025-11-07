@@ -1,0 +1,504 @@
+/* ==========================================================================
+   font cdn (※ @import는 CSS 최상단 유지)
+   ========================================================================== */
+/* PP Neue Montreal Font Family */
+@import url('https://fonts.cdnfonts.com/css/pp-neue-montreal');
+
+/* ==========================================================================
+   color tokens / default css  (글로벌 변수 + 기본 설정)
+   ========================================================================== */
+/* light base */
+:root {
+  --bg: #f3f2f4;
+  --bg-loader: #ffffff;           
+  --color-counter: color-mix(in srgb, var(--text-base) 89%, transparent);        
+  --text-base: #101010;
+  --text: color-mix(in srgb, var(--text-base) 89%, transparent);
+  --muted: #666660;
+  --line: #666660;
+  --card: #ffffff;
+  --surface: #f7f7f7; 
+  --space: clamp(2rem, 2.5vw, 36px);
+  --shadow-amb: rgba(0,0,0,.06);
+  --shadow-key: rgba(0,0,0,.12);
+  --shadow-line: rgba(0,0,0,.05);
+  --card-shadow: 
+    0 0 0 1px var(--shadow-line),
+    0 2px 4px var(--shadow-amb),a7a7a0
+    0 8px 16px -6px var(--shadow-key);
+  --header-h: 64px;
+}
+
+/* dark */
+:root[data-theme="dark"] {
+  color-scheme: light dark;
+  --bg: #101010;
+  --bg-loader: #000000;
+  --color-counter: #a7a7a0;    
+  --text-base: #f4f4f4;
+  --text: color-mix(in srgb, var(--text-base) 89%, transparent);
+  --muted: #727272;
+  --line: #b2b2b2;
+  --accent: #d6ff6b; 
+  --card: #1b1b1b;
+  --surface: #151515;
+  --shadow-amb: rgba(0,0,0,.4);
+  --shadow-key: rgba(0,0,0,.6);
+  --shadow-line: rgba(255,255,255,.08);
+  --card-shadow:
+    0 0 0 1px var(--shadow-line),
+    0 1px 2px var(--shadow-amb),
+    0 6px 12px -4px var(--shadow-key);
+}
+
+/* body */
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'PP Neue Montreal', sans-serif;
+  letter-spacing: -0.3px;
+  font-size: 16px;
+  line-height: 1.2;
+  overflow: hidden;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* h2 */
+h2 {
+  font-size: 2rem;
+}
+
+/* =========================
+   smooth anchor (append-only)
+   ========================= */
+
+/* 헤더 높이(사이트 값으로 맞춰도 됨) */
+:root { --header-h: 64px; }
+
+/* 앵커 목적지 보정: #id 요소가 헤더에 가리지 않도록 */
+[id] { scroll-margin-top: calc(var(--header-h) + 8px); }
+
+/* 혹시 JS가 auto로 덮어써도 이기게 */
+html, body { scroll-behavior: smooth !important; }
+
+/* body 스크롤 막힘 덮어쓰기 (가로는 막고, 세로는 풀기) */
+body { overflow-x: hidden; }
+
+
+/* ==========================================================================
+   common css (공통 유틸/컴포넌트 기초)
+   ========================================================================== */
+/* btn (두 군데 있던 정의 병합) */
+.btn { 
+  background: transparent; 
+  color: var(--text); 
+  border: 1px solid var(--line) !important; 
+  height: 36px; 
+  opacity: 0;
+  padding: 0 14px; 
+  border-radius: 999px; 
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* card */
+.card { 
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+}
+
+/* SplitText animation */
+.line { 
+  overflow: hidden; 
+}
+.line span {
+  position: relative;
+  display: block;
+  transform: translateY(125%);
+  will-change: transform;
+}
+
+/* ==========================================================================
+   header (헤더/내비게이션)
+   ========================================================================== */
+header {
+  position: fixed; 
+  left: 0;
+  top: 0;
+  width: 100%;
+  z-index: 10;
+  backdrop-filter: saturate(140%) blur(4px);
+  background: color-mix(in hsl, var(--bg) 90%, transparent);
+  border-bottom: 1px solid transparent;
+  padding: 0 2rem;
+}
+
+/* nav_row */
+.nav_row {
+  display: flex;
+  align-items: center;
+  height: 64px;
+  justify-content: space-between;
+}
+
+/* logo */
+.logo { 
+  font-weight: 700; 
+  font-size: 1.2rem; 
+}
+
+/* nav_links */
+.nav_links { 
+  display: flex; 
+  gap: 20px; 
+  justify-content: center; 
+}
+
+/* nav_links a */
+.nav_links a { 
+  opacity: .9;
+}
+
+/* nav_right */
+.nav_right { 
+  display: flex; 
+  gap: 10px; 
+  justify-content: flex-end; 
+  align-items: center; 
+}
+
+/* btn_theme */
+.btn_theme {
+  display: inline-flex; 
+  align-items: center; 
+  gap: .5rem;
+  padding: .5rem .875rem; 
+  border-radius: 999px;
+  line-height: 1; 
+  cursor: pointer; 
+  user-select: none;
+  border: 1px solid var(--line) !important;
+}
+
+/* btn_theme btn_theme__label */
+.btn_theme .btn_theme__label {  
+  white-space: nowrap; 
+}
+
+/* btn_theme icon */
+.btn_theme .icon { 
+  width: 1rem; 
+  height: 1rem; 
+  display: none; 
+}
+
+/* 테마별 아이콘 노출: dark=달, light=해 */
+html[data-theme="dark"]  .btn_theme .icon-moon,
+html[data-theme="light"] .btn_theme .icon-sun { 
+  display: inline-block; 
+}
+
+/* btn_theme icon::before 아이콘 공통 */
+.btn_theme .icon-moon::before, 
+.btn_theme .icon-sun::before { 
+  font-family: "Font Awesome 7 Free";
+  content: "\f111";
+  display: block; 
+  font-size: 1rem; 
+  font-style: normal;
+}
+
+/* btn_theme icon-moon::before */
+.btn_theme .icon-moon::before {
+  font-weight: bold;
+}
+
+/* ==========================================================================
+   hero (히어로 영역)
+   ========================================================================== */
+.hero { 
+  /* padding: 8rem 0 0;   */
+  position: relative; 
+  overflow: hidden; 
+}
+
+/* hero_wrap (flex+grid 동시 선언 → grid만 유지) */
+.hero_wrap {  
+  position: relative;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: auto 1fr auto;
+  justify-content: center;
+  align-items: center;
+}
+
+/* hero_meta */
+.hero_meta {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  padding: 0 2rem;
+  flex-direction: column;
+  gap: 1rem;
+  align-self: flex-end;
+  max-width: 22rem;
+  position: absolute;
+  top: 8%;
+  left: 0;
+}
+
+/* cta */
+.cta { display: inline-flex; align-items: center; gap: 8px; }
+
+/* kicker */
+.kicker {
+  font-weight: 700;
+  max-width: 22ch; line-height: 1.04;
+  letter-spacing: -0.02rem;
+}
+
+/* lede */
+.lede {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: clamp(14px, 1.4vw, 16px);
+  max-width: 56ch;
+}
+
+/* hero_wordmark */
+.hero_wordmark {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  font-size: clamp(140px, 30vw, 480px);
+  font-weight: 500;
+  letter-spacing: -13px;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+/* hero_footer */
+.hero_footer {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  color: var(--muted);
+  justify-content: space-between;
+  padding: 0 2rem;
+  position: absolute;
+  bottom: 5%;
+  left: 0;
+  width: 100%; 
+}
+
+/* hero_bg */
+.hero_bg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: var(--bg-loader);
+  transform-origin: bottom;
+  transform: scaleY(0%);
+  z-index: 10;
+}
+
+/* counter */
+.counter {
+  position: fixed;
+  left: 3rem; bottom: 2rem;
+  display: flex;
+  color: var(--color-counter);
+  height: 120px;
+  font-size: 120px;
+  line-height: 150px;
+  font-weight: 500;
+  clip-path: polygon(0 0, 100% 0, 100% 120px, 0 120px);
+  z-index: 10;
+}
+.counter_1, .counter_2, .counter_3 { position: relative; top: -15px; }
+.num1offset1, .num1offset2 { position: relative; }
+.num1offset1 { right: -30px; }
+.num1offset2 { right: -15px; }
+
+/* img_box */
+.img_box {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 10;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* img_box img */
+.img_box .img {
+  position: absolute;
+  bottom: 2rem; right: 2rem;
+  width: 15%;
+  aspect-ratio: 5 / 3;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+}
+
+/* img_box img.animate_out */
+.img_box .img.animate_out {
+  bottom: unset; right: unset;  
+  top: 6rem;
+  left: 22rem;
+  aspect-ratio: 5 / 3;
+}
+
+/* ==========================================================================
+   works (작품/카드 그리드)
+   ========================================================================== */
+.works { 
+  scroll-margin-top: calc(var(--header-h) + 8px); 
+}
+
+/* section_head */
+.section_head {
+  display: flex; 
+  justify-content: space-between; 
+  align-items: baseline; 
+  gap: 12px;
+  border-top: 1px solid var(--line); 
+  padding: 2rem 2rem 0 2rem;
+}
+
+/* mask_reveal */
+.mask_reveal{
+  display: inline-block;
+  clip-path: inset(0 100% 0 0);
+  font-weight: bold;
+  font-size: 2rem;
+  will-change: clip-path, transform;
+}
+
+/* filters */
+.filters {  
+  display: flex; 
+  gap: 8px; 
+  flex-wrap: wrap; 
+}
+
+/* chip */
+.chip { 
+  border: 1px solid var(--line); 
+  border-radius: 999px; 
+  padding: 6px 12px; 
+  font-size: 13px; 
+  cursor: pointer;
+}
+
+/* chip */
+.chip[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+/* card_grid  */
+.card_grid {    
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 14px;
+  margin-top: calc(var(--space) * 1.2);
+  padding: 0 2rem 2rem 2rem;
+}
+
+/* card & image */
+.card, .card_img, .card_img img {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: transform;
+}
+.card {
+  grid-column: span 3;
+  background: var(--card);
+  border-radius: 14px;
+  overflow: clip;
+  position: relative;
+  height: fit-content;
+  box-shadow: var(--card-shadow);
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+
+.card_img {     
+  aspect-ratio: 4 / 2.5;
+  width: 100%;
+  object-fit: cover;
+  display: block; 
+  height: auto;
+  overflow: hidden;
+}
+.card_img img { display: block; }
+
+.card_body { display: grid; gap: 8px; padding: 2rem; }
+.card_meta { color: var(--muted); font-size: 13px; display: flex; gap: 8px; align-items: center; }
+.card_title { font-weight: 600; }
+
+.card_hover {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--bg) 50%, transparent);
+  opacity: 0; transition: .25s; font-weight: 600;
+}
+.card:hover .card_hover { opacity: 1; }
+.card:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px var(--shadow-line),
+              0 3px 6px var(--shadow-amb),
+              0 14px 28px -10px var(--shadow-key);
+}
+
+/* ==========================================================================
+   modal (모달/다이얼로그)
+   ========================================================================== */
+.modal {
+  width: min(96vw, 1400px);
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+.modal::backdrop { background: rgb(0 0 0 / .55); backdrop-filter: blur(2px); }
+.modal[open] { overflow: hidden; padding: 0; } /* dialog 자체 스크롤 방지 */
+
+.modal_sheet {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  width: 100%;
+  height: min(90vh, 1100px);
+  overflow: hidden;
+  border-radius: 16px;
+}
+.modal_head {
+  position: relative; z-index: 1; border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 2rem;
+}
+.modal_head h2 {
+  font-size: 1.2rem;
+}
+.modal_actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.modal_body { overflow: auto; -webkit-overflow-scrolling: touch; }
+.modal_body img { 
+  display: block; 
+  height: auto;
+}
+
+.visually_hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* 모달 열렸을 때 스크롤 잠금 */
+html.is_modal_open, body.is_modal_open { overflow: hidden !important; height: 100%; }
+body.is_modal_open { position: fixed; width: 100%; }
+
+/* ==========================================================================
+   footer (푸터)
+   ========================================================================== */
+footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; padding: var(--space); }
+footer .inner { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0; }

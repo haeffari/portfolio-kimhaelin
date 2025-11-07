@@ -1,0 +1,107 @@
+@media (min-width: 375px) and (max-width: 768px) {
+  /* h2 */
+  h2 {
+    font-size: 1.2rem;
+  }
+  .counter {
+    font-size: 5rem;
+    left: 1rem;
+    bottom: 0;
+  }
+  .btn_theme__label{
+    display: none;
+  }
+  .hero_wrap {
+    min-height: max(90svh, 500px);
+    grid-template-columns: repeat(1, 1fr);
+  }
+  /* hero_meta */
+  .hero_meta {
+    max-width: 15rem;
+    padding: 2rem;
+  }
+  .hero_wordmark {
+    left: 0;
+    bottom: 3%;
+    transform: translate(0);
+    font-size: clamp(7rem, 20vw, 480px);
+    font-weight: 500;
+    letter-spacing: -5px;
+    width: 100%;
+    text-align: center;
+  }
+  .img_box .img {
+    width: 40%;
+    top: 1rem;
+    right: 1rem;
+  }
+  .img_box .img.animate_out {
+    left: 2rem;
+    top: 55vh;
+  }
+  .section_head {
+    flex-direction: column;
+    text-align: center;
+    gap: 2rem;
+    align-items: center;
+  }
+  .filters {
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .chip {
+    flex: 1;
+    width: calc(100% / 4);
+    font-size: 1rem;
+  }
+  .card_grid {
+    grid-template-columns: repeat(1, 1fr);
+    margin-top: 1.2rem;
+  }
+  footer .inner {
+    flex-direction: column;
+  }
+  p {
+    font-size: 0.8rem;
+  }
+  .slider h1 {
+    font-size: 2rem;
+  }
+  .slide_header {
+    top: 50%;
+    bottom: unset;
+    transform: translate(-50%, -50%);
+    width: 90%;
+  }
+  .slide_description {
+    width: 100%;
+  }
+  .slide_link {
+    transform: translateY(.3rem);
+  }
+  .slider .modal .modal_head h2 {
+    font-size: 1.2rem;
+  }
+  .modal_head {
+     padding: 0.7rem 1rem;
+  }
+  .btn_theme {
+        padding: .6rem;
+  }
+
+  /* modal */
+  .modal {
+    overflow: hidden;
+    border-radius: 2px;
+  }
+
+  #projectDialog img {
+    height: 100%;
+  }
+
+  /* resumeDialog */
+  #resumeDialog .modal_sheet {
+    height: fit-content;
+  }
+}
