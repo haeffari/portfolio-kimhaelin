@@ -1,3 +1,4 @@
+// projects.js
 import slides from "./slides.js";
 gsap.registerPlugin(SplitText);
 
@@ -117,6 +118,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const data = slides[oneBasedIndex - 1];
     const slide = document.createElement("div");
     slide.className = "slide";
+    // 🔹 이 슬라이드가 slides 배열의 몇 번째인지 표기
+    slide.dataset.idx = String(oneBasedIndex - 1);
 
     // 비디오 박스
     const videoWrap = document.createElement("div");
@@ -174,6 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const a = document.createElement("a");
     a.textContent = "View Project";
     a.href = "#";
+    // 🔹 버튼에도 동일 인덱스
     a.dataset.idx = String(oneBasedIndex - 1);
     linkBox.appendChild(a);
 
@@ -444,7 +448,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const sheet = $(".modal_sheet", dlg);
     const btnClose = $("#resumeClose", dlg);      // 기존 아이디 유지
-    const btnDownload = $("#resumeDownload", dlg);// 기존 아이디 유지
+    const btnDownload = $("#resumeDownload", dlg);// 기존 아이디 유지 (없으면 null)
     const titleEl = $("#resumeTitle", dlg);       // 기존 아이디 유지
     const bodyEl  = $(".modal_body", dlg);
 
@@ -497,10 +501,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       openModalBase(dlg, sheet, btnClose);
 
-      // ✅ 새 미디어 객체 생성
       const media = freshMedia(isVideo);
 
-      // ✅ 비디오일 경우: 이미지 프리로드 안하고 바로 소스 넣고 재생하기
       if (isVideo) {
         media.src = toAbs(full);
         media.style.opacity = "1";
@@ -508,7 +510,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // ✅ 이미지일 경우: 기존 흐름 유지
       try {
         const t = await preload(toAbs(thumb));
         media.src = t.src;
@@ -527,13 +528,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function close(){ closeModalBase(dlg, sheet); }
 
-    // 슬라이드의 "View Project" 버튼 위임
+    // 🔹 슬라이드의 "View Project" + 슬라이드 전체 클릭 위임
     document.addEventListener("click", (e) => {
-      const a = e.target.closest(".slide_link a");
-      if (!a) return;
+      // 모달 내부에서의 클릭은 무시
+      if (e.target.closest(".modal")) return;
+
+      const linkOrSlide = e.target.closest(".slide_link a, .slide");
+      if (!linkOrSlide) return;
+
       e.preventDefault();
 
-      const i = Number(a.dataset.idx ?? -1);
+      const idxStr =
+        linkOrSlide.dataset.idx ??
+        linkOrSlide.closest(".slide")?.dataset.idx;
+
+      const i = Number(idxStr ?? -1);
+      if (!Number.isInteger(i) || i < 0 || i >= slides.length) return;
+
       const d = slides[i];
       if (!d) return;
 

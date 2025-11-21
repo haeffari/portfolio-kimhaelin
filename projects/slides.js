@@ -11,7 +11,7 @@ const slides = [
   },
   {
     slug: "shampoobar",
-    slideTitle: "Natural Rocks Bar",
+    slideTitle: "Nature Rocks Bar",
     slideDescription:
       "A minimal yet organic concept emphasizing sustainability, gentle care, and eco-friendly living.",
     slideTags: ["scroll wheel"],
